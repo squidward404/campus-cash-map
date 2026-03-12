@@ -8,7 +8,7 @@
 
 🔒 **Login-free Progressive Web App for Student Budget Management**
 
-🌐 **Live Demo:** [campuscashmap.web.app](https://campuscashmap.web.app)
+🌐 **Live Site:** [campuscashmap.web.app](https://campuscashmap.web.app)
 
 ---
 
