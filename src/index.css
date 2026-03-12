@@ -1,0 +1,57 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+:root {
+  font-family: 'Space Grotesk', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: var(--text-strong);
+  --text-strong: #173244;
+  --text-soft: #4f6674;
+  --bg-radial-1: #eff8ff;
+  --bg-radial-2: #d5f0ef;
+  --bg-base: #f4f9fc;
+  --surface: rgba(255, 255, 255, 0.9);
+  --surface-border: #d4e2ea;
+  --surface-shadow: 0 12px 28px -24px rgba(28, 48, 67, 0.75);
+  --input-bg: #f9fcfe;
+  --input-border: #c5d6df;
+  --hero-gradient: linear-gradient(145deg, #0f2d42, #174d67 58%, #6db8ba);
+  --hero-text: #f4f8fb;
+  --track-bg: #e1edf2;
+  --ring-hole: #fbfefe;
+}
+
+:root[data-theme='dark'] {
+  --text-strong: #e2f0fa;
+  --text-soft: #a4bccb;
+  --bg-radial-1: #14202f;
+  --bg-radial-2: #1e2e36;
+  --bg-base: #0b1520;
+  --surface: rgba(18, 31, 45, 0.9);
+  --surface-border: #243a4b;
+  --surface-shadow: 0 16px 35px -25px rgba(0, 0, 0, 0.8);
+  --input-bg: #132433;
+  --input-border: #2c475a;
+  --hero-gradient: linear-gradient(145deg, #081624, #123650 56%, #24645f);
+  --hero-text: #eff8ff;
+  --track-bg: #203746;
+  --ring-hole: #0f1f2c;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 10% 10%, var(--bg-radial-1) 0, transparent 40%),
+    radial-gradient(circle at 90% 0%, var(--bg-radial-2) 0, transparent 30%),
+    var(--bg-base);
+}
