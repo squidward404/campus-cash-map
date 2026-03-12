@@ -1,5 +1,17 @@
 # CampusCashMap
 
+![React](https://img.shields.io/badge/React-19.2.0-61dafb?style=for-the-badge&logo=react&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite-7.3.1-646cff?style=for-the-badge&logo=vite&logoColor=white)
+![License](https://img.shields.io/badge/License-Private-red?style=for-the-badge)
+![Platform](https://img.shields.io/badge/Platform-Web%20%7C%20PWA%20%7C%20Mobile-blue?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-Stable-success?style=for-the-badge)
+
+🔒 **Login-free Progressive Web App for Student Budget Management**
+
+🌐 **Live Demo:** [campuscashmap.web.app](https://campuscashmap.web.app)
+
+---
+
 **Mobile-first, login-free web app for students to plan monthly budgets and track expenses.**
 
 CampusCashMap is a Progressive Web App (PWA) designed to help students manage their finances without the need for accounts or logins. It works offline, stores data locally on your device, and supports Ethiopian Calendar dates and Currency (ETB).
@@ -21,6 +33,23 @@ CampusCashMap is a Progressive Web App (PWA) designed to help students manage th
 - **⚠️ Safety Controls:** One-click reset for the current month with confirmation dialog.
 - **💬 Feedback:** In-app action banners for save/add/remove/validation actions.
 
+## 🚀 Quick Start
+
+### Use Online (No Installation Required)
+1. Visit **[campuscashmap.web.app](https://campuscashmap.web.app)** in your browser.
+2. Start tracking your budget immediately — no sign-up needed!
+
+### Install as an App (PWA)
+For the best experience, install CampusCashMap to your device:
+
+| Platform | Instructions |
+|----------|-------------|
+| **Android / Chrome / Edge** | Tap the "Install App" button in the app header, or use browser menu → "Install CampusCashMap" |
+| **iOS / Safari** | Tap **Share** → **Add to Home Screen** |
+| **Desktop (Chrome/Edge)** | Look for the install icon in the address bar, or use menu → "Install CampusCashMap" |
+
+✅ Once installed, the app works **offline** and launches like a native app!
+
 ## 🛠 Tech Stack
 
 - **Frontend:** React 19
@@ -31,7 +60,7 @@ CampusCashMap is a Progressive Web App (PWA) designed to help students manage th
 - **Utilities:** `ethiopian-date` for calendar conversion
 - **Linting:** ESLint (Flat config)
 
-## 🚀 Getting Started
+## 💻 Run Locally (Development)
 
 ### Prerequisites
 - Node.js (v18 or higher recommended)
