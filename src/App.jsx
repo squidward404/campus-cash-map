@@ -478,7 +478,7 @@ function App() {
 
       <section className="hero-card">
         <div>
-          <p className="eyebrow">CampusCashMap</p>
+          <p className="eyebrow">Campus Cash Map</p>
           <h1>Control your money month by month.</h1>
           <p className="subtitle">
             Login-free planner for students to set a budget, log expenses, and track how much is left.
