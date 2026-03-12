@@ -1,50 +1,57 @@
 # CampusCashMap
 
-Mobile-first, login-free web app for students to plan monthly budgets and track expenses.
+**Mobile-first, login-free web app for students to plan monthly budgets and track expenses.**
 
-## Features
+CampusCashMap is a Progressive Web App (PWA) designed to help students manage their finances without the need for accounts or logins. It works offline, stores data locally on your device, and supports Ethiopian Calendar dates and Currency (ETB).
 
-- Set a budget for each month.
-- Add expense records with title, amount, category, date, and optional note.
-- See total spent, remaining amount, and over-budget amount in real time.
-- Visual usage ring that shows monthly budget utilization.
-- Switch between months and keep each month's data separate.
-- Category-wise spending chart for quick analysis.
-- One-click reset for the current month (budget + expenses), with confirmation dialog.
-- In-app action feedback banner for save/add/remove/validation actions.
-- Installable PWA with offline support (service worker + web app manifest).
-- Mobile install button appears when browser install prompt is available.
-- Data persists in browser `localStorage` (no backend, no account).
+## ✨ Features
 
-## PWA Install Notes
+- **💰 Budget Planning:** Set a specific budget for each month.
+- **📝 Expense Tracking:** Add expense records with title, amount, category, date, and optional notes.
+- **📊 Real-time Analytics:** See total spent, remaining amount, and over-budget amounts instantly.
+- **🔄 Visual Usage Ring:** A circular progress indicator shows monthly budget utilization.
+- **📅 Month Switching:** Switch between months seamlessly; each month's data is kept separate.
+- **📈 Category Breakdown:** Visual bar chart for spending analysis by category (Food, Transport, Data, etc.).
+- **🇪🇹 Localized:** 
+  - Currency displayed in **Ethiopian Birr (ETB)**.
+  - Dates displayed in **Ethiopian Calendar** alongside Gregorian dates.
+- **🌓 Theme Toggle:** Animated BB-8 themed dark/light mode switcher.
+- **📲 PWA & Offline:** Installable on mobile/desktop with offline support via Service Workers.
+- **🔒 Privacy First:** No backend, no login. Data persists only in your browser's `localStorage`.
+- **⚠️ Safety Controls:** One-click reset for the current month with confirmation dialog.
+- **💬 Feedback:** In-app action banners for save/add/remove/validation actions.
 
-- Install prompt is available in supported browsers (for example, Chrome/Edge) when app install criteria are met.
-- PWA install requires a secure context (`https://`), except `localhost` on the same device.
-- If testing from another device using a local IP over plain `http://`, install prompt may not appear.
-- On iOS Safari, install manually with `Share -> Add to Home Screen`.
+## 🛠 Tech Stack
 
-## Tech Stack
+- **Frontend:** React 19
+- **Build Tool:** Vite 7
+- **Styling:** Plain CSS (Custom mobile-first UI with CSS Variables)
+- **PWA:** `vite-plugin-pwa` (Service Worker + Web App Manifest)
+- **Hosting:** Firebase Hosting
+- **Utilities:** `ethiopian-date` for calendar conversion
+- **Linting:** ESLint (Flat config)
 
-- React
-- Vite
-- Plain CSS (custom mobile-first UI)
+## 🚀 Getting Started
 
-## Run Locally
+### Prerequisites
+- Node.js (v18 or higher recommended)
+- npm
 
-```bash
-npm install
-npm run dev
-```
+### Installation
 
-Open the URL shown by Vite (usually `http://localhost:5173`).
+1.  **Clone the repository** (or download the source files).
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
+3.  **Run the development server:**
+    ```bash
+    npm run dev
+    ```
+4.  **Open your browser:**
+    Navigate to the URL shown in the terminal (usually `http://localhost:5173`).
 
-## Build
+### Building for Production
 
 ```bash
 npm run build
-```
-
-## Notes
-
-- Currency is displayed in Ethiopian Birr (ETB) by default.
-- Because this app is login-free, data is stored only on the current browser/device.
