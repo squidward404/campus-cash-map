@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useRegisterSW } from 'virtual:pwa-register/react'
 import * as ethiopianDate from 'ethiopian-date'
 import './App.css'
 
@@ -44,6 +45,31 @@ const getDefaultDateForMonth = (month) => {
   return today.startsWith(`${month}-`) ? today : `${month}-01`
 }
 
+const isIsoDate = (value) => /^\d{4}-\d{2}-\d{2}$/.test(value)
+
+const getEarliestExpenseDate = (expenses) => {
+  if (!Array.isArray(expenses) || expenses.length === 0) return null
+  const validDates = expenses
+    .map((item) => item?.date)
+    .filter((value) => typeof value === 'string' && isIsoDate(value))
+    .sort((a, b) => a.localeCompare(b))
+  return validDates[0] || null
+}
+
+const getSavingsStartForMonthData = (month, monthData) => {
+  const fromData = monthData?.savingsStartDate
+  if (typeof fromData === 'string' && isIsoDate(fromData) && fromData.startsWith(`${month}-`)) {
+    return fromData
+  }
+
+  const firstExpenseDate = getEarliestExpenseDate(monthData?.expenses)
+  if (firstExpenseDate && firstExpenseDate.startsWith(`${month}-`)) {
+    return firstExpenseDate
+  }
+
+  return null
+}
+
 const shiftMonthKey = (month, delta) => {
   const [year, monthPart] = month.split('-')
   const shifted = new Date(Number(year), Number(monthPart) - 1 + delta, 1)
@@ -58,6 +84,7 @@ const createInitialData = () => {
       [month]: {
         budget: 0,
         expenses: [],
+        savingsStartDate: null,
       },
     },
   }
@@ -75,11 +102,26 @@ const readStoredData = () => {
       return createInitialData()
     }
 
-    const safeCurrent = parsed.currentMonth || getCurrentMonth()
+    const actualCurrentMonth = getCurrentMonth()
+    const safeCurrent = parsed.currentMonth === actualCurrentMonth ? parsed.currentMonth : actualCurrentMonth
     const safeMonths = parsed.months && typeof parsed.months === 'object' ? parsed.months : {}
 
     if (!safeMonths[safeCurrent]) {
-      safeMonths[safeCurrent] = { budget: 0, expenses: [] }
+      safeMonths[safeCurrent] = {
+        budget: 0,
+        expenses: [],
+        savingsStartDate: null,
+      }
+    }
+
+    for (const [month, value] of Object.entries(safeMonths)) {
+      const monthData = value && typeof value === 'object' ? value : {}
+      safeMonths[month] = {
+        ...monthData,
+        budget: Number(monthData.budget) || 0,
+        expenses: Array.isArray(monthData.expenses) ? monthData.expenses : [],
+        savingsStartDate: getSavingsStartForMonthData(month, monthData),
+      }
     }
 
     return {
@@ -139,10 +181,12 @@ const toEthiopianDate = (isoDate) => {
 
 const formatMonthLabel = (month) => {
   if (!month) return 'This month'
-  const ethiopian = toEthiopianDate(`${month}-01`)
+  const referenceDate = month === getCurrentMonth() ? getTodayIsoDate() : `${month}-15`
+  const ethiopian = toEthiopianDate(referenceDate)
   if (!ethiopian) return month
-  const monthName = ETHIOPIAN_MONTHS_AM[ethiopian.month - 1] || String(ethiopian.month)
-  return `${monthName} ${formatAmharicInteger(ethiopian.year)}`
+
+  const ethiopianMonthName = ETHIOPIAN_MONTHS_AM[ethiopian.month - 1] || String(ethiopian.month)
+  return `${ethiopianMonthName} ${formatAmharicInteger(ethiopian.year)}`
 }
 
 const formatEthiopicDate = (value) => {
@@ -173,7 +217,10 @@ const formatRelativeDate = (value) => {
   return `In ${Math.abs(dayDiff)} days`
 }
 
-const formatExpenseDateLabel = (value) => `${formatRelativeDate(value)} • ${formatEthiopicDate(value)}`
+const formatExpenseDateLabel = (value) => {
+  if (!value) return 'Unknown day'
+  return `${formatRelativeDate(value)} • ${value} • ${formatEthiopicDate(value)}`
+}
 
 const getInitialTheme = () => {
   const savedTheme = localStorage.getItem(THEME_STORAGE_KEY)
@@ -185,6 +232,17 @@ const getInitialTheme = () => {
 }
 
 function App() {
+  const [swRegistration, setSwRegistration] = useState(null)
+  const {
+    needRefresh: [needRefresh, setNeedRefresh],
+    updateServiceWorker,
+  } = useRegisterSW({
+    onRegisteredSW(_swUrl, registration) {
+      if (!registration) return
+      setSwRegistration(registration)
+      registration.update()
+    },
+  })
   const [data, setData] = useState(readStoredData)
   const [theme, setTheme] = useState(getInitialTheme)
   const [flash, setFlash] = useState(null)
@@ -198,7 +256,15 @@ function App() {
       ? 'On iPhone/iPad: tap Share, then Add to Home Screen.'
       : 'If no popup appears, open browser menu and tap Install app.'
   const activeMonth = data.currentMonth
-  const monthData = data.months[activeMonth] || { budget: 0, expenses: [] }
+  const monthData = data.months[activeMonth] || {
+    budget: 0,
+    expenses: [],
+    savingsStartDate: null,
+  }
+  const savingsStartDate = monthData.savingsStartDate
+  const savingsStartLabel = savingsStartDate
+    ? formatExpenseDateLabel(savingsStartDate)
+    : 'Not started yet (add first expense)'
   const monthOptions = useMemo(() => {
     const keys = Object.keys(data.months)
     if (!keys.includes(activeMonth)) {
@@ -275,20 +341,42 @@ function App() {
     }
   }, [])
 
+  useEffect(() => {
+    if (!swRegistration) return undefined
+
+    const checkForUpdates = () => swRegistration.update()
+    const intervalId = window.setInterval(checkForUpdates, 60 * 1000)
+
+    window.addEventListener('focus', checkForUpdates)
+    document.addEventListener('visibilitychange', checkForUpdates)
+
+    return () => {
+      window.clearInterval(intervalId)
+      window.removeEventListener('focus', checkForUpdates)
+      document.removeEventListener('visibilitychange', checkForUpdates)
+    }
+  }, [swRegistration])
+
   const persist = (nextData) => {
     setData(nextData)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(nextData))
   }
 
   const ensureMonth = (month) => {
+    const ensuredMonthData = data.months[month] || {
+      budget: 0,
+      expenses: [],
+      savingsStartDate: null,
+    }
+
     const nextData = {
       ...data,
       currentMonth: month,
       months: {
         ...data.months,
-        [month]: data.months[month] || {
-          budget: 0,
-          expenses: [],
+        [month]: {
+          ...ensuredMonthData,
+          savingsStartDate: getSavingsStartForMonthData(month, ensuredMonthData),
         },
       },
     }
@@ -347,6 +435,8 @@ function App() {
         [activeMonth]: {
           ...monthData,
           expenses: [nextExpense, ...monthData.expenses],
+          savingsStartDate:
+            monthData.savingsStartDate || (monthData.expenses.length === 0 ? nextExpense.date : null),
         },
       },
     }
@@ -385,6 +475,7 @@ function App() {
         [activeMonth]: {
           budget: 0,
           expenses: [],
+          savingsStartDate: null,
         },
       },
     }
@@ -443,6 +534,28 @@ function App() {
         </div>
       ) : null}
 
+      {needRefresh ? (
+        <div className="update-banner" role="status" aria-live="polite">
+          <p>A new version is ready. Update now to get the latest app changes.</p>
+          <div className="update-banner-actions">
+            <button
+              type="button"
+              className="primary-btn"
+              onClick={() => updateServiceWorker(true)}
+            >
+              Update App
+            </button>
+            <button
+              type="button"
+              className="ghost-btn"
+              onClick={() => setNeedRefresh(false)}
+            >
+              Later
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       <div className="theme-toggle-wrap">
         <label className="bb8-toggle" aria-label="Switch color theme">
           <input
@@ -477,13 +590,7 @@ function App() {
       </div>
 
       <section className="hero-card">
-        <div>
-          <p className="eyebrow">Campus Cash Map</p>
-          <h1>Control your money month by month.</h1>
-          <p className="subtitle">
-            Login-free planner for students to set a budget, log expenses, and track how much is left.
-          </p>
-        </div>
+        <img className="hero-logo" src="/logo.png" alt="Campus Cash Map logo" />
         <div className="hero-controls">
           <div className="month-switcher" role="group" aria-label="Month selector">
             <span>Month</span>
@@ -533,6 +640,7 @@ function App() {
       <section className="summary-grid">
         <article className="summary-card ring-card">
           <h2>{formatMonthLabel(activeMonth)}</h2>
+          <p className="month-start-meta">Savings start: {savingsStartLabel}</p>
           <div className="progress-wrap">
             <div
               className="progress-ring"
