@@ -12,7 +12,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['pwa-icon-v2-192.png', 'pwa-icon-v2-512.png'],
+      includeAssets: ['logo.png', 'pwa-icon-v2-192.png', 'pwa-icon-v2-512.png'],
       manifest: {
         name: 'CampusCashMap',
         short_name: 'CampusCashMap',

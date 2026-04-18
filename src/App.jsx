@@ -40,6 +40,34 @@ const getTodayIsoDate = () => {
   return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
 }
 
+const getEthiopiaNow = (date = new Date()) => new Date(date.getTime() + ETHIOPIA_UTC_OFFSET_MS)
+
+const getEthiopiaDateKey = (date = new Date()) => {
+  const ethiopiaNow = getEthiopiaNow(date)
+  return `${ethiopiaNow.getUTCFullYear()}-${String(ethiopiaNow.getUTCMonth() + 1).padStart(2, '0')}-${String(ethiopiaNow.getUTCDate()).padStart(2, '0')}`
+}
+
+const getMillisecondsUntilEthiopiaNoon = (date = new Date()) => {
+  const ethiopiaNow = getEthiopiaNow(date)
+  const noonUtcToday = Date.UTC(
+    ethiopiaNow.getUTCFullYear(),
+    ethiopiaNow.getUTCMonth(),
+    ethiopiaNow.getUTCDate(),
+    12,
+    0,
+    0,
+    0,
+  )
+  const hasPassedNoon =
+    ethiopiaNow.getUTCHours() > 12 ||
+    (ethiopiaNow.getUTCHours() === 12 &&
+      (ethiopiaNow.getUTCMinutes() > 0 ||
+        ethiopiaNow.getUTCSeconds() > 0 ||
+        ethiopiaNow.getUTCMilliseconds() > 0))
+  const nextNoonUtc = hasPassedNoon ? noonUtcToday + 24 * 60 * 60 * 1000 : noonUtcToday
+  return Math.max(nextNoonUtc - ETHIOPIA_UTC_OFFSET_MS - date.getTime(), 1000)
+}
+
 const getDefaultDateForMonth = (month) => {
   const today = getTodayIsoDate()
   return today.startsWith(`${month}-`) ? today : `${month}-01`
@@ -247,6 +275,7 @@ function App() {
   const [theme, setTheme] = useState(getInitialTheme)
   const [flash, setFlash] = useState(null)
   const [showResetModal, setShowResetModal] = useState(false)
+  const [visibleExpenseCount, setVisibleExpenseCount] = useState(5)
   const [deferredInstallPrompt, setDeferredInstallPrompt] = useState(null)
   const [isInstalled, setIsInstalled] = useState(false)
   const isIOSDevice = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase())
@@ -303,12 +332,28 @@ function App() {
   const remaining = Math.max(budget - spent, 0)
   const overBy = Math.max(spent - budget, 0)
   const utilization = budget > 0 ? Math.min((spent / budget) * 100, 100) : 0
+  const canShowMoreExpenses = visibleExpenseCount < monthData.expenses.length
+  const canShowFewerExpenses = visibleExpenseCount > 5
 
   useEffect(() => {
     if (!flash) return undefined
     const timeoutId = window.setTimeout(() => setFlash(null), 2200)
     return () => window.clearTimeout(timeoutId)
   }, [flash])
+
+  useEffect(() => {
+    setVisibleExpenseCount(5)
+  }, [activeMonth])
+
+  useEffect(() => {
+    const total = monthData.expenses.length
+    if (total === 0) return
+
+    const nextVisibleCount = total <= 5 ? total : Math.min(Math.max(visibleExpenseCount, 5), total)
+    if (nextVisibleCount !== visibleExpenseCount) {
+      setVisibleExpenseCount(nextVisibleCount)
+    }
+  }, [monthData.expenses.length, visibleExpenseCount])
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -781,8 +826,9 @@ function App() {
         {monthData.expenses.length === 0 ? (
           <p className="empty">No expenses logged yet for this month.</p>
         ) : (
-          <ul className="expense-list">
-            {monthData.expenses.map((item) => (
+          <>
+            <ul className="expense-list">
+            {monthData.expenses.slice(0, visibleExpenseCount).map((item) => (
               <li key={item.id}>
                 <div className="expense-main">
                   <h4>{item.title}</h4>
@@ -803,7 +849,38 @@ function App() {
                 </div>
               </li>
             ))}
-          </ul>
+            </ul>
+
+            {monthData.expenses.length > 5 ? (
+              <div className="expense-pagination">
+                {canShowMoreExpenses ? (
+                  <button
+                    type="button"
+                    className="expense-arrow-btn"
+                    onClick={() =>
+                      setVisibleExpenseCount((prev) => Math.min(prev + 5, monthData.expenses.length))
+                    }
+                    aria-label="Show more expenses"
+                    title="Show more"
+                  >
+                    <span aria-hidden="true">↓</span>
+                  </button>
+                ) : null}
+
+                {canShowFewerExpenses ? (
+                  <button
+                    type="button"
+                    className="expense-arrow-btn"
+                    onClick={() => setVisibleExpenseCount((prev) => Math.max(prev - 5, 5))}
+                    aria-label="Show fewer expenses"
+                    title="Show less"
+                  >
+                    <span aria-hidden="true">↑</span>
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
+          </>
         )}
       </section>
 
